@@ -26,9 +26,7 @@ class NimbahaLinkGenerator:
 
     @staticmethod
     def clear_console():
-        command = 'clear'
-        if os.name in ('nt', 'dos'):  # If Machine is running on Windows, use cls
-            command = 'cls'
+        command = 'cls' if os.name in ('nt', 'dos') else 'clear'
         os.system(command)
 
     @staticmethod
@@ -73,10 +71,7 @@ class NimbahaLinkGenerator:
 
         result = requests.post(generate_download_url, data=form)
 
-        if result.status_code == 200:
-            return True
-        else:
-            return False
+        return result.status_code == 200
 
     def generating_link(self, link, index=0, is_list=False, is_need_to_create_file=False, f=None):
         generate_download_url = 'https://linknim.ir/dl/'
@@ -103,7 +98,7 @@ class NimbahaLinkGenerator:
             print(colored(f"Link {index + 1} >", "cyan"), local_filename)
         else:
             self.clear_console()
-            print(colored(f"Link Downloaded. "), local_filename)
+            print(colored("Link Downloaded. "), local_filename)
 
         self.goto_next_line()
 
@@ -124,7 +119,7 @@ class NimbahaLinkGenerator:
         self.goto_next_line()
         input_response = input(
             "All the link(s) entered in the downloads folder will be downloaded. do you continue (y/n) > ")
-        if input_response == "y" or input_response == "Y":
+        if input_response in ["y", "Y"]:
             self.create_result_file = True
 
         if self.create_result_file:
@@ -138,10 +133,7 @@ class NimbahaLinkGenerator:
             self.valid_type = "txt"
 
         else:
-            if input.startswith("http"):
-                self.valid_type = "url"
-            else:
-                self.valid_type = "invalid"
+            self.valid_type = "url" if input.startswith("http") else "invalid"
 
     def start(self):
         self.valid_input()
@@ -158,15 +150,14 @@ class NimbahaLinkGenerator:
 
     def get_download_path(self):
         """Returns the default downloads path for linux or windows"""
-        if os.name == 'nt':
-            import winreg
-            sub_key = r'SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders'
-            downloads_guid = '{374DE290-123F-4565-9164-39C4925E467B}'
-            with winreg.OpenKey(winreg.HKEY_CURRENT_USER, sub_key) as key:
-                location = winreg.QueryValueEx(key, downloads_guid)[0]
-            return location
-        else:
+        if os.name != 'nt':
             return os.path.join(os.path.expanduser('~'), 'Downloads')
+        import winreg
+        sub_key = r'SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders'
+        downloads_guid = '{374DE290-123F-4565-9164-39C4925E467B}'
+        with winreg.OpenKey(winreg.HKEY_CURRENT_USER, sub_key) as key:
+            location = winreg.QueryValueEx(key, downloads_guid)[0]
+        return location
 
     def start_generating_link(self):
         self.downloads_folder = os.path.join(self.get_download_path(
